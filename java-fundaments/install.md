@@ -19,3 +19,4 @@ source /etc/profile.d/jdk17.sh
 [https://computingforgeeks.com/install-oracle-java-openjdk-fedora-linux/] 
 
 
+o se puedan usar un gestiòn de versiones jenv
