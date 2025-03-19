@@ -1,4 +1,4 @@
-# Ruta de Estudio: Java y SQL para Spring Boot
+# Ruta de Estudio: Java y SQL
 
 ## 📅 Plan de Estudio (1 Mes)
 
@@ -11,14 +11,23 @@
 | Jueves | [Curso de Programación en SQL](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Introducción a SQL | 40 min |
 | Viernes | [Introducción a las Bases de Datos con MySQL](https://todocodeacademy.com/course/introduccion-a-las-bases-de-datos-con-mysql/) | Consultas Básicas | 50 min |
 
-### Semana 2: Programación Orientada a Objetos (POO)
+### Semana 2: Programación Orientada a Objetos (POO) y SQL
 | Día | Curso | Sección | Duración |
 |----|--------|---------|----------|
-| Lunes | Java en 13 Días | Herencia y Polimorfismo | 60 min |
-| Martes | Java en 13 Días | Interfaces y Abstractas | 55 min |
-| Miércoles | Curso SQL | Joins y Subconsultas | 45 min |
-| Jueves | MySQL TodoCode | Índices y Optimización | 50 min |
-| Viernes | Práctica | Proyectos pequeños con Java y SQL | - |
+| Lunes | [Java en 13 Días](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Herencia y Polimorfismo | 60 min |
+| Martes | [Java en 13 Días](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Interfaces y Clases Abstractas | 55 min |
+| Miércoles | [Curso de Programación en SQL](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Joins y Subconsultas | 45 min |
+| Jueves | [Introducción a las Bases de Datos con MySQL](https://todocodeacademy.com/course/introduccion-a-las-bases-de-datos-con-mysql/) | Índices y Optimización | 50 min |
+| Viernes | Práctica | Ejercicios de SQL y POO | - |
+
+### Semana 3: Fundamentos Avanzados de Java y SQL
+| Día | Curso | Sección | Duración |
+|----|--------|---------|----------|
+| Lunes | [Java en 13 Días](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Manejo de Excepciones | 60 min |
+| Martes | [Java en 13 Días](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Archivos y Streams | 55 min |
+| Miércoles | [Curso de Programación en SQL](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Procedimientos Almacenados | 50 min |
+| Jueves | [Curso de Programación en SQL](https://www.udemy.com/course-dashboard-redirect/?course_id=XXXXXXX) | Vistas y Triggers | 45 min |
+| Viernes | Práctica | Proyecto Integrador Java + SQL | - |
 
 ## 🎮 Plataformas para practicar jugando
 ### Java
@@ -35,3 +44,4 @@
 - Instalar Java con `brew install jenv`
 - Configurar JDK 17 con `jenv add /Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home/`
 
+🚀 ¡A darle con todo al estudio!
