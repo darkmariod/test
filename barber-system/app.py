@@ -5,7 +5,6 @@ from streamlit_option_menu import option_menu
 servicios = [
     "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
     "Afeitado o Perfilación de barba - 3.00 USD",
-    "Afeitado o Perfilación de barba (completo) - 6.00 USD",
     "Corte Clásico con máquina - 5.00 USD",
     "Corte Clásico a tijera - 5.00 USD",
     "Freestyle (diseño personalizado) - 7.00 USD",
@@ -49,26 +48,19 @@ if selected == "Portafolio":
 # ================== DETALLES ==================
 if selected == "Detalles":
     st.image("assets/map.JPG")
-    st.markdown("[Pulsa aquí](www.google.com) para ver la dirección en Google Maps.")
+    st.markdown("[📍 Pulsa aquí](www.google.com) para ver la dirección en Google Maps.")
 
-    st.subheader("Barberos")
+    st.subheader("💈 Barberos")
     column1, column2 = st.columns(2)
     column1.image("assets/barber-1.png", caption="Josué")
     column2.image("assets/barber-2.png", caption="Ariel")
 
-    st.subheader("Horarios de apertura y contacto")
-    st.write("---")
-    st.text("📞 098 840 2541")
-    st.write("---")
-
-    # Mostrar horarios en dos columnas
+    # Mostrar horarios en tabla visual
+    st.markdown("### 🕒 Horarios de Atención")
     c1, c2 = st.columns(2)
     for dia, hora in horarios.items():
-        c1.text(f"📅 {dia}")
-        c2.text(f"⏰ {hora}")
-
-    st.write("---")
-    st.markdown("📷 [Instagram](www.instagram.com)")
+        c1.markdown(f"**📅 {dia}**")
+        c2.markdown(f"⏰ {hora}")
 
 # ================== RESEÑAS ==================
 if selected == "Reseñas":
@@ -93,4 +85,3 @@ if selected == "Servicios":
 
     if enviar:
         st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
-
