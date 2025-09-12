@@ -2,7 +2,17 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 
 # Variables
-servicios = ["Corte", "Barba", "Corte más barba", "Perfilado de Cejas", "Corte más diseño"]
+servicios = [
+    "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
+    "Afeitado o Perfilación de barba - 3.00 USD",
+    "Afeitado o Perfilación de barba (completo) - 6.00 USD",
+    "Corte Clásico con máquina - 5.00 USD",
+    "Corte Clásico a tijera - 5.00 USD",
+    "Freestyle (diseño personalizado) - 7.00 USD",
+    "Semi Ondulado (ondas) - desde 20.00 USD",
+    "VIP: Corte + Barba + Cejas + bebida de cortesía - 8.00 USD",
+]
+
 empleados = ["Josué", "Ariel"]
 
 # Horarios en diccionario
