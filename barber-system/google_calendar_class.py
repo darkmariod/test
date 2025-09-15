@@ -18,7 +18,6 @@ class GoogleCalendar:
         return service
 
     def get_events(self, date=None):
-        # Obtener eventos
         if not date:
             events = self.service.events().list(
                 calendarId=self.calendarid
@@ -34,13 +33,11 @@ class GoogleCalendar:
         return events.get('items', [])
 
     def get_event_by_date(self, start_date, end_date):
-        # Obtener evento
         event = self.service.events().list(
             calendarId=self.calendarid,
             timeMin=start_date,
             timeMax=end_date
         ).execute()
-        # devolver el id del evento
         return event["items"][0]["id"]
 
     def get_start_times(self, date):
@@ -54,19 +51,11 @@ class GoogleCalendar:
         return start_times
 
     def create_event(self, name_event, start_time, end_time, timezone, attendees=None):
-        # Crear un evento
         event = {
             'summary': name_event,
-            'start': {
-                'dateTime': start_time,
-                'timeZone': timezone,
-            },
-            'end': {
-                'dateTime': end_time,
-                'timeZone': timezone,
-            },
+            'start': {'dateTime': start_time, 'timeZone': timezone},
+            'end': {'dateTime': end_time, 'timeZone': timezone},
         }
-
         if attendees:
             event["attendees"] = [{"email": email} for email in attendees]
 
@@ -81,7 +70,6 @@ class GoogleCalendar:
         return created_event
 
     def update_event(self, event_id, summary=None, start_time=None, end_time=None):
-        # Actualizar un evento
         event = self.service.events().get(
             calendarId=self.calendarid,
             eventId=event_id
@@ -103,11 +91,7 @@ class GoogleCalendar:
         return updated_event
 
     def delete_event(self, event_id):
-        # Eliminar un evento
         self.service.events().delete(
             calendarId=self.calendarid,
             eventId=event_id
         ).execute()
-
- 
- 
