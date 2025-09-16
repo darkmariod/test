@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
-from calendar import GoogleCalendar
+from google_calendar import GoogleCalendar
 
 # ================= CONFIGURACIÓN GOOGLE CALENDAR =================
 CREDENTIALS = "credentials.json"   # tu archivo de credenciales
