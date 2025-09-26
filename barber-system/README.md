@@ -12,4 +12,4 @@ Finalidad:
 
 La aplicación web tiene como objetivo automatizar el proceso de agendamiento de citas en la barbería Seven Barber Club | Riobamba | Ecuador.
 
-Desarrollada por: Monkey Computer .
+Desarrollada por: Monkey Computer
