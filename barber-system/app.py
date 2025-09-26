@@ -1,15 +1,15 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
-from google_calendar import GoogleCalendar
+from gc_service import GoogleCalendar  # tu clase en gc_service.py
 
 # ================= CONFIGURACIÓN GOOGLE CALENDAR =================
-CREDENTIALS = "credentials.json"   # tu archivo de credenciales
-CALENDAR_ID = "tu_correo@gmail.com"  # o el ID de tu calendario
+CREDENTIALS = "credentials.json"   # tu archivo de credenciales de service account
+CALENDAR_ID = "mariodanielq.p@gmail.com"  # tu calendario compartido con la service account
 gc = GoogleCalendar(CREDENTIALS, CALENDAR_ID)
 
 # ================= VARIABLES =================
-servicios = [
+servicios_raw = [
     "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
     "Afeitado o Perfilación de barba - 3.00 USD",
     "Corte Clásico con máquina - 5.00 USD",
@@ -18,6 +18,14 @@ servicios = [
     "Semi Ondulado (ondas) - desde 20.00 USD",
     "VIP: Corte + Barba + Cejas + bebida de cortesía - 8.00 USD",
 ]
+
+# Destacar el VIP
+servicios = []
+for s in servicios_raw:
+    if "VIP" in s:
+        servicios.append(f"🌟 {s}")
+    else:
+        servicios.append(s)
 
 empleados = ["Josué", "Ariel"]
 
@@ -81,30 +89,31 @@ if selected == "Servicios":
     a1, a2 = st.columns(2)
 
     nombre = a1.text_input("Tu nombre")
-    email = a2.text_input("Tu email")
+    email = a2.text_input("Tu email (opcional)")
     fecha = a1.date_input("Fecha")
-    hora = a2.selectbox("Horas disponibles", ["09:00", "10:00", "11:00", "12:00",
-                                              "14:00","15:00","16:00", "17:00",
-                                              "18:00", "19:00","20:00"])
-
+    hora = a2.selectbox("Horas disponibles", [
+        "09:00", "10:00", "11:00", "12:00",
+        "14:00","15:00","16:00", "17:00",
+        "18:00", "19:00","20:00"
+    ])
     servicio = a1.selectbox("Servicio", servicios)
     empleado = a2.selectbox("Barberos", empleados)
     nota = a1.text_area("💬 Nota (opcional)")
 
-    enviar = st.button("Reservar")
-
-    if enviar:
-        # Crear fecha/hora en formato ISO
+    if st.button("Reservar"):
         start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
         end = start + timedelta(hours=1)
 
-        evento = gc.create_event(
-            name_event=f"Reserva: {servicio} con {empleado} - {nombre}",
-            start_time=start.isoformat(),
-            end_time=end.isoformat(),
-            timezone="America/Guayaquil",
-            attendees=[email] if email else None
-        )
+        try:
+            # Crear evento SIN attendees para evitar error 403
+            gc.create_event(
+                name_event=f"Reserva: {servicio} con {empleado} - {nombre}",
+                start_time=start.isoformat(),
+                end_time=end.isoformat(),
+                timezone="America/Guayaquil"
+            )
 
-        st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
-        st.info(f"📅 Se creó en Google Calendar: {evento.get('htmlLink')}")
+            st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
+
+        except Exception as e:
+            st.error(f"❌ Ocurrió un error: {e}")

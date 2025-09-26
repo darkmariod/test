@@ -1,3 +1,4 @@
+# gc_service.py
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -15,16 +16,12 @@ class GoogleCalendar:
         )
         return build('calendar', 'v3', credentials=credentials)
 
-    def create_event(self, name_event, start_time, end_time, timezone, attendees=None):
-        """Crea un evento en Google Calendar"""
+    def create_event(self, name_event, start_time, end_time, timezone):
         event = {
             'summary': name_event,
             'start': {'dateTime': start_time, 'timeZone': timezone},
             'end': {'dateTime': end_time, 'timeZone': timezone},
         }
-
-        if attendees:
-            event["attendees"] = [{"email": email} for email in attendees]
 
         try:
             created_event = self.service.events().insert(
