@@ -1,15 +1,15 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
-from google_calendar import GoogleCalendar
+from gc_service import GoogleCalendar  # tu clase en gc_service.py
 
 # ================= CONFIGURACIÓN GOOGLE CALENDAR =================
-CREDENTIALS = "credentials.json"   # tu archivo de credenciales
-CALENDAR_ID = "tu_correo@gmail.com"  # o el ID de tu calendario
+CREDENTIALS = "credentials.json"
+CALENDAR_ID = "mariodanielq.p@gmail.com"
 gc = GoogleCalendar(CREDENTIALS, CALENDAR_ID)
 
 # ================= VARIABLES =================
-servicios = [
+servicios_raw = [
     "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
     "Afeitado o Perfilación de barba - 3.00 USD",
     "Corte Clásico con máquina - 5.00 USD",
@@ -19,20 +19,18 @@ servicios = [
     "VIP: Corte + Barba + Cejas + bebida de cortesía - 8.00 USD",
 ]
 
+# Destacar VIP con emoji 🌟
+servicios = []
+for s in servicios_raw:
+    if "VIP" in s:
+        servicios.append(f"🌟 {s}")
+    else:
+        servicios.append(s)
+
 empleados = ["Josué", "Ariel"]
 
-horarios = {
-    "Lunes": "09:00 - 21:00",
-    "Martes": "09:00 - 21:00",
-    "Miércoles": "09:00 - 21:00",
-    "Jueves": "09:00 - 21:00",
-    "Viernes": "09:00 - 21:00",
-    "Sábado": "09:00 - 21:00",
-    "Domingo": "09:00 - 21:00"
-}
-
 # ================= CONFIG STREAMLIT =================
-st.set_page_config(page_title="App de citas", page_icon="✂️", layout="centered")
+st.set_page_config(page_title="Seven Barber Club", page_icon="✂️", layout="centered")
 st.image("assets/banner.png")
 st.title("Seven Barber Club")
 st.text("📍 Av. Unidad Nacional ente Juan Montalvo y Carabobo")
@@ -45,66 +43,42 @@ selected = option_menu(
     orientation="horizontal",
 )
 
-# ================= PORTAFOLIO =================
-if selected == "Portafolio":
-    st.image("assets/corte-1.jpg", caption="Degradado básico")
-    st.image("assets/corte-2.jpg", caption="Corte más barba")
-    st.image("assets/corte-3.jpg", caption="Raya personalizada")
-
-# ================= DETALLES =================
-if selected == "Detalles":
-    st.image("assets/map.JPG")
-    st.markdown("[📍 Pulsa aquí](www.google.com) para ver la dirección en Google Maps.")
-
-    st.subheader("💈 Barberos")
-    column1, column2 = st.columns(2)
-    column1.image("assets/barber-1.png", caption="Josué")
-    column2.image("assets/barber-2.png", caption="Ariel")
-
-    st.markdown("### 🕒 Horarios de Atención")
-    c1, c2 = st.columns(2)
-    for dia, hora in horarios.items():
-        c1.markdown(f"**📅 {dia}**")
-        c2.markdown(f"⏰ {hora}")
-
-    st.markdown("📞 <b>098 840 2541</b>", unsafe_allow_html=True)
-    st.markdown("📷 [Instagram](www.instagram.com)")
-
-# ================= RESEÑAS =================
-if selected == "Reseñas":
-    st.image("assets/opinion1.JPG")
-    st.image("assets/opinion2.JPG")
-
 # ================= SERVICIOS =================
 if selected == "Servicios":
     st.subheader("Reservar cita")
-    a1, a2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    nombre = a1.text_input("Tu nombre")
-    email = a2.text_input("Tu email")
-    fecha = a1.date_input("Fecha")
-    hora = a2.selectbox("Horas disponibles", ["09:00", "10:00", "11:00", "12:00",
-                                              "14:00","15:00","16:00", "17:00",
-                                              "18:00", "19:00","20:00"])
+    nombre = col1.text_input("Tu nombre")
+    email = col2.text_input("Tu email")
+    fecha = col1.date_input("Fecha")
+    hora = col2.selectbox("Hora disponible", ["09:00", "10:00", "11:00", "12:00",
+                                             "14:00","15:00","16:00", "17:00",
+                                             "18:00", "19:00","20:00"])
+    servicio = col1.selectbox("Servicio", servicios)
+    empleado = col2.selectbox("Barbero", empleados)
+    nota = col1.text_area("💬 Nota (opcional)")
 
-    servicio = a1.selectbox("Servicio", servicios)
-    empleado = a2.selectbox("Barberos", empleados)
-    nota = a1.text_area("💬 Nota (opcional)")
+    if st.button("Mostrar resumen"):
+        st.markdown("### 📝 Resumen de tu reserva")
+        st.markdown(f"**Nombre:** {nombre}")
+        st.markdown(f"**Fecha:** {fecha}")
+        st.markdown(f"**Hora:** {hora}")
+        st.markdown(f"**Servicio:** {servicio}")
+        st.markdown(f"**Barbero:** {empleado}")
+        if nota:
+            st.markdown(f"**Nota:** {nota}")
 
-    enviar = st.button("Reservar")
+        if st.button("Confirmar reserva"):
+            start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
+            end = start + timedelta(hours=1)
 
-    if enviar:
-        # Crear fecha/hora en formato ISO
-        start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
-        end = start + timedelta(hours=1)
-
-        evento = gc.create_event(
-            name_event=f"Reserva: {servicio} con {empleado} - {nombre}",
-            start_time=start.isoformat(),
-            end_time=end.isoformat(),
-            timezone="America/Guayaquil",
-            attendees=[email] if email else None
-        )
-
-        st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
-        st.info(f"📅 Se creó en Google Calendar: {evento.get('htmlLink')}")
+            try:
+                gc.create_event(
+                    name_event=f"Reserva: {servicio} con {empleado} - {nombre}",
+                    start_time=start.isoformat(),
+                    end_time=end.isoformat(),
+                    timezone="America/Guayaquil"
+                )
+                st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
+            except Exception as e:
+                st.error(f"❌ Error al crear la reserva: {str(e)}")
