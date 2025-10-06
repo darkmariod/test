@@ -1,168 +1,167 @@
 import streamlit as st
+from datetime import datetime, timedelta
 from streamlit_option_menu import option_menu
-from datetime import datetime, date, time, timedelta
 from gc_service import GoogleCalendar
 
-# ================= CONFIG STREAMLIT =================
-st.set_page_config(page_title="Seven Club Barbería", page_icon="💈", layout="wide")
+# ================== CONFIGURACIÓN DE PÁGINA ==================
+st.set_page_config(page_title="WabiSabi 💈", page_icon="💈", layout="wide")
 
-# ================= ESTILOS =================
-st.markdown(
-    """
-    <style>
-    .title-center {
-        text-align: center;
-        font-size: 40px;
-        font-weight: bold;
-        color: #333333;
-    }
-    .subtitle-center {
-        text-align: center;
-        font-size: 18px;
-        color: gray;
-    }
-    .card {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 15px;
-        text-align: center;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    .card:hover {
-        transform: scale(1.03);
-        box-shadow: 0px 6px 16px rgba(0,0,0,0.2);
-    }
-    .service-title {
-        font-size: 20px;
-        font-weight: bold;
-        margin-top: 10px;
-    }
-    .service-price {
-        font-size: 16px;
-        color: #666666;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# ================= LOGO + TÍTULO =================
-st.image("assets/logo.png", width=120)
-st.markdown("<div class='title-center'>Seven Club Barbería 💈</div>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle-center'>📍 Av. Unidad Nacional entre Juan Montalvo y Carabobo</p>", unsafe_allow_html=True)
-
-# ================= CALENDARS POR SEDE =================
+# ================== CONFIGURACIÓN DE SEDES ==================
 SEDES = {
-    "Matriz": "calendar_id_matriz@group.calendar.google.com",
-    "Sucursal Norte": "calendar_id_norte@group.calendar.google.com",
-    "Sucursal Sur": "calendar_id_sur@group.calendar.google.com",
+    "Matriz - Centro": {
+        "barberos": [
+            {"nombre": "Alex", "img": "assets/barber-isra.jpg"},
+            {"nombre": "Luis", "img": "assets/barber-dani.jpg"},
+            {"nombre": "Carlos", "img": "assets/barber-jose.jpg"},
+        ],
+        "calendar_id": "calendario_matriz_id@group.calendar.google.com"
+    },
+    "Sucursal Norte": {
+        "barberos": [
+            {"nombre": "Mario", "img": "assets/barber-mario.jpg"},
+            {"nombre": "David", "img": "assets/barber-david.jpg"},
+        ],
+        "calendar_id": "calendario_norte_id@group.calendar.google.com"
+    },
+    "Sucursal Sur": {
+        "barberos": [
+            {"nombre": "Andrés", "img": "assets/barber-andres.jpg"},
+            {"nombre": "Pedro", "img": "assets/barber-pedro.jpg"},
+        ],
+        "calendar_id": "calendario_sur_id@group.calendar.google.com"
+    },
+    "Sucursal Este": {
+        "barberos": [
+            {"nombre": "Kevin", "img": "assets/barber-kevin.jpg"},
+            {"nombre": "Roberto", "img": "assets/barber-roberto.jpg"},
+        ],
+        "calendar_id": "calendario_este_id@group.calendar.google.com"
+    }
 }
 
-# ================= BARBEROS =================
-BARBEROS = {
-    "Matriz": [
-        {"nombre": "Josué", "img": "assets/barber-1.png"},
-        {"nombre": "Ariel", "img": "assets/barber-2.png"},
-    ],
-    "Sucursal Norte": [
-        {"nombre": "Kevin", "img": "assets/barber-3.png"},
-        {"nombre": "Luis", "img": "assets/barber-4.png"},
-    ],
-    "Sucursal Sur": [
-        {"nombre": "Andrés", "img": "assets/barber-5.png"},
-    ],
+# ================== ESTILOS ==================
+st.markdown("""
+<style>
+div[data-testid="stSidebar"] {display: none;}
+
+/* ===== MENÚ SUPERIOR ===== */
+nav[data-testid="stHorizontalBlock"] {
+    background-color: #0c0c0c !important;
+    border-radius: 10px;
+    padding: 8px 0;
 }
 
-# ================= MENÚ =================
+/* ===== BOTONES ===== */
+div.stButton > button {
+    background-color: #7df4d3 !important;
+    color: #0c0c0c !important;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    padding: 0.6em 1.2em;
+}
+div.stButton > button:hover {
+    background-color: #5ce0b8 !important;
+    color: black !important;
+}
+
+/* ===== TEXTOS ===== */
+span.precio {
+    color: black !important;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ================== MENÚ SUPERIOR ==================
 selected = option_menu(
     menu_title=None,
-    options=["Servicios", "Barberos", "Portafolio", "Detalles"],
-    icons=["scissors", "people", "images", "geo-alt"],
+    options=["Servicios", "Barberos", "Agendar Cita", "Ubicación"],
+    icons=["scissors", "people", "calendar-check", "geo-alt"],
     orientation="horizontal",
+    default_index=0,
+    styles={
+        "container": {"background-color": "#0c0c0c", "padding": "8px", "border-radius": "10px"},
+        "icon": {"color": "#7df4d3", "font-size": "20px"},
+        "nav-link": {
+            "color": "#7df4d3",
+            "font-weight": "bold",
+            "text-transform": "uppercase",
+            "margin": "0px 20px",
+        },
+        "nav-link-selected": {"background-color": "#7df4d3", "color": "#0c0c0c", "border-radius": "8px"},
+    },
 )
 
-# ================= SERVICIOS =================
+# ================== SERVICIOS ==================
+SERVICIOS = [
+    {"nombre": "Corte Clásico", "precio": "10 USD", "img": "assets/logo-1.jpg"},
+    {"nombre": "Barba & Diseño", "precio": "8 USD", "img": "assets/logo-2.jpg"},
+    {"nombre": "Corte + Barba", "precio": "15 USD", "img": "assets/colors.jpg"},
+    {"nombre": "VIP: Corte + Barba + Cejas", "precio": "18 USD", "img": "assets/banner.jpg"},
+]
+
+# ================== PÁGINAS ==================
+
+# ---- SERVICIOS ----
 if selected == "Servicios":
-    st.subheader("💇 Nuestros Servicios")
-
-    services = [
-        {"nombre": "Corte Clásico", "precio": "10 USD", "img": "assets/corte.png"},
-        {"nombre": "Barba & Diseño", "precio": "8 USD", "img": "assets/barba.png"},
-        {"nombre": "Corte + Barba", "precio": "15 USD", "img": "assets/cortebarba.png"},
-        {"nombre": "VIP: Corte + Barba + Cejas + bebida 🍹", "precio": "20 USD", "img": "assets/vip.png"},
-    ]
-
+    st.markdown("<h2 style='text-align:center;'>💈 Nuestros Servicios 💈</h2>", unsafe_allow_html=True)
     cols = st.columns(4)
-    for col, service in zip(cols, services):
+    for col, servicio in zip(cols, SERVICIOS):
         with col:
-            st.markdown(f"""
-                <div class="card">
-                    <img src="{service['img']}" style="width:100%; border-radius:15px;">
-                    <div class="service-title">{service['nombre']}</div>
-                    <div class="service-price">💲 {service['precio']}</div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.image(servicio["img"], use_container_width=True)
+            st.markdown(f"<strong>{servicio['nombre']}</strong>", unsafe_allow_html=True)
+            st.markdown(f"<span class='precio'>💲 {servicio['precio']}</span>", unsafe_allow_html=True)
 
-    st.markdown("---")
-    st.subheader("📅 Reserva tu Cita")
+# ---- BARBEROS ----
+elif selected == "Barberos":
+    st.markdown("<h2 style='text-align:center;'>👨‍🔧 Nuestro Equipo de Barberos</h2>", unsafe_allow_html=True)
+    sede = st.selectbox("🏢 Selecciona una sede", list(SEDES.keys()))
+    st.markdown(f"### 💈 Barberos de {sede}")
 
-    sede = st.selectbox("📍 Selecciona la sede", list(SEDES.keys()))
+    barberos = SEDES[sede]["barberos"]
+    cols = st.columns(len(barberos))
+    for col, barbero in zip(cols, barberos):
+        with col:
+            st.image(barbero["img"], use_container_width=True)
+            st.markdown(f"<p style='text-align:center; color:##7df4d3; font-weight:bold;'>{barbero['nombre']}</p>", unsafe_allow_html=True)
+
+# ---- AGENDAR ----
+elif selected == "Agendar Cita":
+    st.markdown("## 📅 Reserva tu cita")
 
     with st.form("form_reserva"):
         nombre = st.text_input("👤 Nombre completo")
-        email = st.text_input("✉️ Correo electrónico (obligatorio)")
-        servicio = st.selectbox("💈 Selecciona un servicio", [s["nombre"] for s in services])
-        barbero = st.selectbox("💈 Selecciona tu barbero", [b["nombre"] for b in BARBEROS[sede]])
-        fecha = st.date_input("📆 Fecha", min_value=date.today())
-        hora = st.time_input("⏰ Hora", value=time(10, 0))
-        nota = st.text_area("📝 Nota (opcional)")
+        email = st.text_input("📧 Correo electrónico")
+        telefono = st.text_input("📞 Número de celular")
 
-        submit = st.form_submit_button("✅ Confirmar Reserva")
+        sede = st.selectbox("🏢 Selecciona una sede", list(SEDES.keys()))
+        barbero = st.selectbox("💇 Selecciona tu barbero", [b["nombre"] for b in SEDES[sede]["barberos"]])
+        servicio = st.selectbox("💈 Servicio", [s["nombre"] for s in SERVICIOS])
 
-        if submit:
-            calendar = GoogleCalendar("credentials.json", SEDES[sede])
-            if not email or not nombre:
-                st.error("⚠️ Completa todos los campos obligatorios.")
+        fecha = st.date_input("📆 Fecha de la cita", datetime.today())
+        hora = st.time_input("⏰ Hora de la cita", datetime.now().time())
+
+        enviar = st.form_submit_button("💾 Confirmar Reserva")
+
+        if enviar:
+            if nombre and email and telefono:
+                calendar_ids = {k: v["calendar_id"] for k, v in SEDES.items()}
+                gc = GoogleCalendar("credentials.json", calendar_ids)
+                gc.create_event(sede, nombre, telefono, email, servicio, barbero, fecha, hora)
+                st.success(f"✅ Cita reservada para {nombre} en la sede {sede} el {fecha} a las {hora}")
             else:
-                start_time = datetime.combine(fecha, hora)
-                end_time = start_time + timedelta(minutes=30)
+                st.warning("⚠️ Por favor, completa todos los campos obligatorios.")
 
-                if calendar.is_time_available(start_time, end_time):
-                    calendar.add_event(
-                        start_time,
-                        end_time,
-                        summary=f"Cita de {nombre} con {barbero}",
-                        description=f"Servicio: {servicio}\nSede: {sede}\nBarbero: {barbero}\nNota: {nota}",
-                        email=email,
-                    )
-                    st.success(f"✅ Reserva confirmada con {barbero} en {sede} el {fecha} a las {hora.strftime('%H:%M')}.")
-                else:
-                    st.error("❌ Ya existe una cita en ese horario. Por favor selecciona otra hora.")
+# ---- UBICACIÓN ----
+elif selected == "Ubicación":
+    st.markdown("## 📍 Nuestras Sedes")
+    st.markdown("""
+    **📍 Matriz - Centro:** Av. Unidad Nacional entre Juan Montalvo y Carabobo  
+    **📍 Sucursal Norte:** Av. Amazonas y Colón  
+    **📍 Sucursal Sur:** Calle Loja y Ayacucho  
+    **📍 Sucursal Este:** Av. 6 de Diciembre y Portugal  
 
-# ================= BARBEROS =================
-if selected == "Barberos":
-    st.subheader("👨‍🔧 Conoce a nuestros Barberos")
-    sede_actual = st.selectbox("📍 Ver barberos por sede", list(BARBEROS.keys()))
-    cols = st.columns(3)
-    for i, barbero in enumerate(BARBEROS[sede_actual]):
-        with cols[i % 3]:
-            # <-- reemplazado use_column_width por use_container_width
-            st.image(barbero["img"], caption=barbero["nombre"], use_container_width=True)
-
-# ================= PORTAFOLIO =================
-if selected == "Portafolio":
-    st.subheader("📸 Algunos de nuestros trabajos")
-    st.image("assets/corte-1.jpg", caption="Degradado básico", use_container_width=True)
-    st.image("assets/corte-2.jpg", caption="Corte + Barba", use_container_width=True)
-    st.image("assets/corte-3.jpg", caption="Raya personalizada", use_container_width=True)
-
-# ================= DETALLES =================
-if selected == "Detalles":
-    st.subheader("📍 Ubicación")
-    st.image("assets/map.JPG", use_container_width=True)
-    st.markdown("[Abrir en Google Maps](https://www.google.com/maps)")
-
-    st.subheader("📞 Contacto")
-    st.markdown("📱 **098 840 2541**")
-    st.markdown("📷 [Instagram](https://www.instagram.com)")
+    **📞 Teléfono:** 098 840 2541  
+    **🕐 Horario:** Lunes a Sábado: 09:00 - 20:00 | Domingo: 10:00 - 16:00
+    """)
