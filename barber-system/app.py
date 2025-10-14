@@ -1,8 +1,9 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, time
 from streamlit_option_menu import option_menu
 from gc_service import GoogleCalendar
 from PIL import Image
+from googleapiclient.errors import HttpError
 
 # ================== CONFIGURACIÓN DE PÁGINA ==================
 st.set_page_config(page_title="WabiSabi Barber", layout="wide")
@@ -24,8 +25,8 @@ SEDES = {
         "maps_url": "https://www.google.com/maps?q=-2.90055,-79.00453",
         "img": "assets/logo-2.jpg",
         "barberos": [
-            {"nombre": "Israel", "img": "assets/barber-isra.jpg", "calendar_id": "barbero_israel@gmail.com"},
-            {"nombre": "Josué", "img": "assets/Josue_SedeMatriz.jpg", "calendar_id": "barbero_dani@gmail.com"},
+            {"nombre": "Israel", "img": "assets/barber-isra.jpg", "calendar_id": "mariodanielq.p@gmail.com"},
+            {"nombre": "Josué", "img": "assets/Josue_SedeMatriz.jpg", "calendar_id": "guamanjosue380@gmail.com"},
             {"nombre": "Carlos", "img": "assets/Carlos_SedeMatriz.jpg", "calendar_id": "barbero_jose@gmail.com"},
         ],
     },
@@ -55,7 +56,7 @@ SEDES = {
         "maps_url": "https://www.google.com/maps?q=-2.9189,-79.0226",
         "img": "assets/logo-1.jpg",
         "barberos": [
-            {"nombre": "Anothony", "img": "assets/Anthony_SedeUrban.jpg", "calendar_id": "barbero_jose_sur@gmail.com"},
+            {"nombre": "Anthony", "img": "assets/Anthony_SedeUrban.jpg", "calendar_id": "barbero_jose_sur@gmail.com"},
             {"nombre": "Isra", "img": "assets/barber-isra.jpg", "calendar_id": "barbero_isra_sur@gmail.com"},
         ],
     },
@@ -140,23 +141,43 @@ elif selected == "Agendar Cita":
         enviar = st.form_submit_button("💾 Confirmar Reserva")
 
         if enviar:
-            if nombre and email and telefono:
-                calendar_id = next((b["calendar_id"] for b in SEDES[sede]["barberos"] if b["nombre"] == barbero), None)
-
-                if calendar_id:
-                    gc = GoogleCalendar("credentials.json", {sede: calendar_id})
-                    try:
-                        if not gc.is_available(sede, fecha, hora):
-                            st.error("🚫 El barbero ya tiene una cita o actividad en esa hora.")
-                        else:
-                            gc.create_event(sede, nombre, telefono, email, servicio, barbero, fecha, hora)
-                            st.success(f"✅ Cita reservada para {nombre} en {sede} con {barbero} el {fecha} a las {hora}")
-                    except Exception as e:
-                        st.error(f"❌ Error al crear la cita: {e}")
-                else:
-                    st.error("❌ No se encontró el calendario del barbero seleccionado.")
-            else:
+            if not (nombre and email and telefono):
                 st.warning("⚠️ Por favor, completa todos los campos obligatorios.")
+            else:
+                calendar_id = next((b["calendar_id"] for b in SEDES[sede]["barberos"] if b["nombre"] == barbero), None)
+                if not calendar_id:
+                    st.error("❌ No se encontró el calendario del barbero seleccionado.")
+                else:
+                    # VALIDACIÓN HORARIO: solo 10:00 - 19:00
+                    if hora < datetime.strptime("10:00", "%H:%M").time() or hora > datetime.strptime("19:00", "%H:%M").time():
+                        st.error("⛔ Solo se permiten reservas entre las 10:00 y las 19:00.")
+                    else:
+                        gc = GoogleCalendar("credentials.json")
+                        try:
+                            # comprobar disponibilidad en el calendario del barbero elegido
+                            disponible = gc.is_available(calendar_id, fecha, hora)
+                            if not disponible:
+                                st.error("🚫 El barbero ya tiene una cita o actividad en esa hora.")
+                            else:
+                                # crear evento e invitar a todos los barberos de la sede
+                                gc.create_event(
+                                    calendar_id,
+                                    nombre,
+                                    telefono,
+                                    email,
+                                    servicio,
+                                    [b["calendar_id"] for b in SEDES[sede]["barberos"]],
+                                    fecha,
+                                    hora
+                                )
+                                st.success(f"✅ Cita reservada para {nombre} en {sede} con {barbero} el {fecha} a las {hora}")
+                        except HttpError as he:
+                            st.error("❌ Error al acceder al calendario. Verifica que el calendario esté compartido con la cuenta de servicio.")
+                            st.info("Comparte el calendario del barbero con el client_email de tu credentials.json (ej: wabisabi@robotic-...).")
+                        except ValueError as ve:
+                            st.error(f"⚠️ {ve}")
+                        except Exception as e:
+                            st.error(f"❌ Error al crear la cita: {e}")
 
 # ---- UBICACIÓN ----
 elif selected == "Ubicación":
