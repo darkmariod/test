@@ -1,28 +1,14 @@
 import streamlit as st
 from datetime import datetime, time
+from googleapiclient.errors import HttpError
 from streamlit_option_menu import option_menu
-
-# ======================================================
-# SIMULACIÓN DE CALENDARIO (sin conexión a Google)
-# ======================================================
-class GoogleCalendar:
-    def __init__(self, creds_file=None):
-        self.eventos = {}
-
-    def get_available_hours(self, calendar_id, fecha):
-        ocupadas = [e["hora"].hour for e in self.eventos.get(calendar_id, []) if e["fecha"] == fecha]
-        return [f"{h}:00" for h in range(9, 20) if h not in ocupadas]
-
-    def create_event(self, calendar_id, nombre, telefono, email, servicio, barberos, fecha, hora, duracion_min=60):
-        self.eventos.setdefault(calendar_id, []).append({"fecha": fecha, "hora": hora})
-        print(f"✅ [SIMULADO] Cita creada para {nombre} en {calendar_id} a las {hora}")
-
+from gc_service import GoogleCalendar
 
 # ==========================================
 # CONFIGURACIÓN
 # ==========================================
 st.set_page_config(page_title="WabiSabi Barber", layout="wide")
-calendar = GoogleCalendar()
+calendar = GoogleCalendar("credentials.json")
 
 # ==========================================
 # DATOS
@@ -39,32 +25,32 @@ SEDES = {
         "direccion": "Av. Unidad Nacional y Carabobo",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Israel", "rating": 4.8, "foto": "assets/barber-isra.jpg"},
-            {"nombre": "Josué", "rating": 4.6, "foto": "assets/Josue_SedeMatriz.jpg"},
+            {"nombre": "Israel", "rating": 4.8, "foto": "assets/barber-isra.jpg", "correo": "mariodanielq.p@gmail.com"},
+            {"nombre": "Josué", "rating": 4.6, "foto": "assets/Josue_SedeMatriz.jpg", "correo": "monkeycomputerec@gmail.com"},
         ],
     },
     "Urban": {
         "direccion": "Calle Loja y Ayacucho",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Anthony", "rating": 4.3, "foto": "assets/Anthony_SedeUrban.jpg"},
-            {"nombre": "Isra", "rating": 4.6, "foto": "assets/barber-isra.jpg"},
+            {"nombre": "Anthony", "rating": 4.3, "foto": "assets/Anthony_SedeUrban.jpg", "correo": "monkeycomputerec@gmail.com"},
+            {"nombre": "Isra", "rating": 4.6, "foto": "assets/barber-isra.jpg", "correo": "mariodanielq.p@gmail.com"},
         ],
     },
     "Barber Training": {
         "direccion": "Av. América y Mariana de Jesús",
         "horario": "Lun-Vie: 09:00-19:00 | Sáb: 09:00-14:00",
         "barberos": [
-            {"nombre": "Jose", "rating": 4.9, "foto": "assets/barber-jose.jpg"},
-            {"nombre": "Don Luis", "rating": 4.7, "foto": "assets/barber-don-luis.jpg"},
+            {"nombre": "Jose", "rating": 4.9, "foto": "assets/barber-jose.jpg", "correo": "monkeycomputerec@gmail.com"},
+            {"nombre": "Don Luis", "rating": 4.7, "foto": "assets/barber-don-luis.jpg", "correo": "mariodanielq.p@gmail.com"},
         ],
     },
     "Veloz": {
         "direccion": "Av. Veloz y 9 de Octubre",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Carlos", "rating": 4.5, "foto": "assets/Marcos_SedeVeloz.jpg"},
-            {"nombre": "Pablo", "rating": 4.7, "foto": "assets/Fabian_SedeVeloz.jpg"},
+            {"nombre": "Carlos", "rating": 4.5, "foto": "assets/Marcos_SedeVeloz.jpg", "correo": "mariodanielq.p@gmail.com"},
+            {"nombre": "Pablo", "rating": 4.7, "foto": "assets/Fabian_SedeVeloz.jpg", "correo": "monkeycomputerec@gmail.com"},
         ],
     },
 }
@@ -116,6 +102,7 @@ selected = option_menu(
         "nav-link-selected": {"background-color": "#2563eb", "color": "white"},
     },
 )
+
 st.session_state.page = selected.lower()
 
 # ==========================================
@@ -170,7 +157,10 @@ elif st.session_state.page == "agendar":
     sede = st.selectbox("🏢 Sede", list(SEDES.keys()), index=list(SEDES.keys()).index(sede_default))
 
     barberos_lista = [b["nombre"] for b in SEDES[sede]["barberos"]]
-    barbero_index = barberos_lista.index(st.session_state.get("selected_barbero", barberos_lista[0]))
+    if "selected_barbero" in st.session_state and st.session_state.selected_barbero in barberos_lista:
+        barbero_index = barberos_lista.index(st.session_state.selected_barbero)
+    else:
+        barbero_index = 0
     barbero = st.selectbox("💇 Barbero", barberos_lista, index=barbero_index)
 
     servicio = st.selectbox(
@@ -189,7 +179,9 @@ elif st.session_state.page == "agendar":
         with col1:
             fecha = st.date_input("📆 Fecha", datetime.today())
         with col2:
-            horas_libres = calendar.get_available_hours(barbero, fecha)
+            correo_barbero = next((b["correo"] for b in SEDES[sede]["barberos"] if b["nombre"] == barbero), None)
+            horas_libres = calendar.get_available_hours(correo_barbero, fecha)
+
             if horas_libres:
                 hora = st.selectbox("⏰ Hora disponible", horas_libres)
             else:
@@ -203,10 +195,23 @@ elif st.session_state.page == "agendar":
             elif not hora:
                 st.error("⏰ No hay hora seleccionada.")
             else:
-                calendar.create_event(barbero, nombre, telefono, email, servicio, [barbero], fecha, time(int(hora.split(':')[0]), 0))
-                st.success(f"✅ Cita confirmada con {barbero} en {sede} para las {hora}.")
-                for key in ["servicio_preseleccionado", "selected_barbero", "selected_sede"]:
-                    st.session_state.pop(key, None)
+                try:
+                    calendar.create_event(
+                        calendar_id=correo_barbero,
+                        nombre=nombre,
+                        telefono=telefono,
+                        email=email,
+                        servicio=servicio,
+                        barberos=[correo_barbero],
+                        fecha=fecha,
+                        hora=time(int(hora.split(':')[0]), 0),
+                        duracion_min=60
+                    )
+                    st.success(f"✅ Cita confirmada con {barbero} en {sede} para las {hora}.")
+                    for key in ["servicio_preseleccionado", "selected_barbero", "selected_sede"]:
+                        st.session_state.pop(key, None)
+                except HttpError as e:
+                    st.error(f"Error al crear el evento: {e}")
 
     if st.button("⬅️ Volver a Servicios", type="secondary", use_container_width=True):
         st.session_state.page = "servicios"
