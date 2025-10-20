@@ -4,15 +4,11 @@ from googleapiclient.errors import HttpError
 from streamlit_option_menu import option_menu
 from gc_service import GoogleCalendar
 
-# ==========================================
 # CONFIGURACIÓN
-# ==========================================
 st.set_page_config(page_title="WabiSabi Barber", layout="wide")
 calendar = GoogleCalendar("credentials.json")
 
-# ==========================================
 # DATOS
-# ==========================================
 SERVICIOS = [
     {"nombre": "Corte Clásico", "descripcion": "Estilo limpio y tradicional", "precio": "6 USD", "tiempo": "35 min"},
     {"nombre": "Fade Moderno", "descripcion": "Difuminado moderno", "precio": "7 USD", "tiempo": "45 min"},
@@ -79,15 +75,11 @@ button[kind="secondary"]:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# ==========================================
 # ESTADO
-# ==========================================
 if "page" not in st.session_state:
     st.session_state.page = "servicios"
 
-# ==========================================
 # MENÚ SUPERIOR
-# ==========================================
 selected = option_menu(
     menu_title=None,
     options=["Servicios", "Barberos", "Agendar", "Sedes"],
@@ -104,10 +96,6 @@ selected = option_menu(
 )
 
 st.session_state.page = selected.lower()
-
-# ==========================================
-# PÁGINAS
-# ==========================================
 
 # SERVICIOS
 if st.session_state.page == "servicios":
@@ -126,7 +114,6 @@ if st.session_state.page == "servicios":
                 st.session_state.servicio_preseleccionado = s["nombre"]
                 st.session_state.page = "agendar"
                 st.rerun()
-
 # BARBEROS
 elif st.session_state.page == "barberos":
     st.title("🏢 Barberos y Sedes")

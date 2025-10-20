@@ -1,6 +1,7 @@
 import streamlit as st
 from datetime import datetime, time
 from streamlit_option_menu import option_menu
+import os
 
 # ======================================================
 # SIMULACIÓN DE CALENDARIO (sin conexión a Google)
@@ -17,7 +18,6 @@ class GoogleCalendar:
         self.eventos.setdefault(calendar_id, []).append({"fecha": fecha, "hora": hora})
         print(f"✅ [SIMULADO] Cita creada para {nombre} en {calendar_id} a las {hora}")
 
-
 # ==========================================
 # CONFIGURACIÓN
 # ==========================================
@@ -33,6 +33,12 @@ SERVICIOS = [
     {"nombre": "Afeitado Premium", "descripcion": "Con toalla caliente y productos premium", "precio": "5 USD", "tiempo": "30 min"},
     {"nombre": "Corte + Barba", "descripcion": "Combina corte y barba", "precio": "10 USD", "tiempo": "1 hora"},
 ]
+
+SEDE_PRINCIPAL = {
+    "nombre": "Matriz - Centro",
+    "direccion": "Av. Unidad Nacional y Carabobo, Riobamba",
+    "horario": "Lun-Sáb: 09:00-20:00"
+}
 
 SEDES = {
     "Matriz - Centro": {
@@ -97,7 +103,27 @@ button[kind="secondary"]:hover {
 # ESTADO
 # ==========================================
 if "page" not in st.session_state:
-    st.session_state.page = "servicios"
+    st.session_state.page = "sedes"
+
+# ==========================================
+# CABECERA CON IMAGEN FUNCIONAL (st.image)
+# ==========================================
+col_img, col_info = st.columns([1, 3])
+with col_img:
+    st.image("assets/logo-1.jpg", use_container_width=True)
+with col_info:
+    st.markdown("""
+        <div style="text-align:center;">
+            <h1 style="font-size:28px; font-weight:700; margin-bottom:5px;">💈 WabiSabi Barber</h1>
+            <p style="font-size:16px; color:#555;">
+                En Barbería Wabi Sabi La Veloz, la dedicación a la perfección en cada corte de cabello es evidente<br>
+                Un equipo de expertos se asegura de que cada cliente reciba una atención personalizada y un estilo que resalte su individualidad. 
+                La experiencia se complementa con un ambiente acogedor, ideal para relajarse mientras se transforma tu look.
+                🕒 Lun-Sáb: 09:00–20:00
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
 
 # ==========================================
 # MENÚ SUPERIOR
@@ -121,8 +147,6 @@ st.session_state.page = selected.lower()
 # ==========================================
 # PÁGINAS
 # ==========================================
-
-# SERVICIOS
 if st.session_state.page == "servicios":
     st.title("💈 Servicios Disponibles")
     cols = st.columns(2)
@@ -140,7 +164,6 @@ if st.session_state.page == "servicios":
                 st.session_state.page = "agendar"
                 st.rerun()
 
-# BARBEROS
 elif st.session_state.page == "barberos":
     st.title("🏢 Barberos y Sedes")
     for sede, data in SEDES.items():
@@ -162,29 +185,21 @@ elif st.session_state.page == "barberos":
                     st.rerun()
         st.divider()
 
-# AGENDAR
 elif st.session_state.page == "agendar":
     st.title("📅 Agendar Cita")
-
     sede_default = st.session_state.get("selected_sede", list(SEDES.keys())[0])
     sede = st.selectbox("🏢 Sede", list(SEDES.keys()), index=list(SEDES.keys()).index(sede_default))
-
     barberos_lista = [b["nombre"] for b in SEDES[sede]["barberos"]]
     barbero_index = barberos_lista.index(st.session_state.get("selected_barbero", barberos_lista[0]))
     barbero = st.selectbox("💇 Barbero", barberos_lista, index=barbero_index)
-
-    servicio = st.selectbox(
-        "💈 Servicio",
-        [s["nombre"] for s in SERVICIOS],
-        index=next((i for i, s in enumerate(SERVICIOS)
-                    if s["nombre"] == st.session_state.get("servicio_preseleccionado")), 0)
-    )
+    servicio = st.selectbox("💈 Servicio", [s["nombre"] for s in SERVICIOS],
+                            index=next((i for i, s in enumerate(SERVICIOS)
+                                        if s["nombre"] == st.session_state.get("servicio_preseleccionado")), 0))
 
     with st.form("form_reserva"):
         nombre = st.text_input("👤 Nombre completo")
         email = st.text_input("📧 Correo electrónico")
         telefono = st.text_input("📞 Celular")
-
         col1, col2 = st.columns(2)
         with col1:
             fecha = st.date_input("📆 Fecha", datetime.today())
@@ -212,7 +227,6 @@ elif st.session_state.page == "agendar":
         st.session_state.page = "servicios"
         st.rerun()
 
-# SEDES
 elif st.session_state.page == "sedes":
     st.title("📍 Nuestras Sedes")
     for sede, data in SEDES.items():
