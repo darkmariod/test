@@ -1,14 +1,32 @@
 import streamlit as st
 from datetime import datetime, time
-from googleapiclient.errors import HttpError
 from streamlit_option_menu import option_menu
-from gc_service import GoogleCalendar
+import os
 
+# ======================================================
+# SIMULACIÓN DE CALENDARIO (sin conexión a Google)
+# ======================================================
+class GoogleCalendar:
+    def __init__(self, creds_file=None):
+        self.eventos = {}
+
+    def get_available_hours(self, calendar_id, fecha):
+        ocupadas = [e["hora"].hour for e in self.eventos.get(calendar_id, []) if e["fecha"] == fecha]
+        return [f"{h}:00" for h in range(9, 20) if h not in ocupadas]
+
+    def create_event(self, calendar_id, nombre, telefono, email, servicio, barberos, fecha, hora, duracion_min=60):
+        self.eventos.setdefault(calendar_id, []).append({"fecha": fecha, "hora": hora})
+        print(f"✅ [SIMULADO] Cita creada para {nombre} en {calendar_id} a las {hora}")
+
+# ==========================================
 # CONFIGURACIÓN
+# ==========================================
 st.set_page_config(page_title="WabiSabi Barber", layout="wide")
-calendar = GoogleCalendar("credentials.json")
+calendar = GoogleCalendar()
 
+# ==========================================
 # DATOS
+# ==========================================
 SERVICIOS = [
     {"nombre": "Corte Clásico", "descripcion": "Estilo limpio y tradicional", "precio": "6 USD", "tiempo": "35 min"},
     {"nombre": "Fade Moderno", "descripcion": "Difuminado moderno", "precio": "7 USD", "tiempo": "45 min"},
@@ -16,37 +34,43 @@ SERVICIOS = [
     {"nombre": "Corte + Barba", "descripcion": "Combina corte y barba", "precio": "10 USD", "tiempo": "1 hora"},
 ]
 
+SEDE_PRINCIPAL = {
+    "nombre": "Matriz - Centro",
+    "direccion": "Av. Unidad Nacional y Carabobo, Riobamba",
+    "horario": "Lun-Sáb: 09:00-20:00"
+}
+
 SEDES = {
     "Matriz - Centro": {
         "direccion": "Av. Unidad Nacional y Carabobo",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Israel", "rating": 4.8, "foto": "assets/barber-isra.jpg", "correo": "mariodanielq.p@gmail.com"},
-            {"nombre": "Josué", "rating": 4.6, "foto": "assets/Josue_SedeMatriz.jpg", "correo": "monkeycomputerec@gmail.com"},
+            {"nombre": "Israel", "rating": 4.8, "foto": "assets/barber-isra.jpg"},
+            {"nombre": "Josué", "rating": 4.6, "foto": "assets/Josue_SedeMatriz.jpg"},
         ],
     },
     "Urban": {
         "direccion": "Calle Loja y Ayacucho",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Anthony", "rating": 4.3, "foto": "assets/Anthony_SedeUrban.jpg", "correo": "monkeycomputerec@gmail.com"},
-            {"nombre": "Isra", "rating": 4.6, "foto": "assets/barber-isra.jpg", "correo": "mariodanielq.p@gmail.com"},
+            {"nombre": "Anthony", "rating": 4.3, "foto": "assets/Anthony_SedeUrban.jpg"},
+            {"nombre": "Isra", "rating": 4.6, "foto": "assets/barber-isra.jpg"},
         ],
     },
     "Barber Training": {
         "direccion": "Av. América y Mariana de Jesús",
         "horario": "Lun-Vie: 09:00-19:00 | Sáb: 09:00-14:00",
         "barberos": [
-            {"nombre": "Jose", "rating": 4.9, "foto": "assets/barber-jose.jpg", "correo": "monkeycomputerec@gmail.com"},
-            {"nombre": "Don Luis", "rating": 4.7, "foto": "assets/barber-don-luis.jpg", "correo": "mariodanielq.p@gmail.com"},
+            {"nombre": "Jose", "rating": 4.9, "foto": "assets/barber-jose.jpg"},
+            {"nombre": "Don Luis", "rating": 4.7, "foto": "assets/barber-don-luis.jpg"},
         ],
     },
     "Veloz": {
         "direccion": "Av. Veloz y 9 de Octubre",
         "horario": "Lun-Sáb: 09:00-20:00",
         "barberos": [
-            {"nombre": "Carlos", "rating": 4.5, "foto": "assets/Marcos_SedeVeloz.jpg", "correo": "mariodanielq.p@gmail.com"},
-            {"nombre": "Pablo", "rating": 4.7, "foto": "assets/Fabian_SedeVeloz.jpg", "correo": "monkeycomputerec@gmail.com"},
+            {"nombre": "Carlos", "rating": 4.5, "foto": "assets/Marcos_SedeVeloz.jpg"},
+            {"nombre": "Pablo", "rating": 4.7, "foto": "assets/Fabian_SedeVeloz.jpg"},
         ],
     },
 }
@@ -75,11 +99,35 @@ button[kind="secondary"]:hover {
 </style>
 """, unsafe_allow_html=True)
 
+# ==========================================
 # ESTADO
+# ==========================================
 if "page" not in st.session_state:
-    st.session_state.page = "servicios"
+    st.session_state.page = "sedes"
 
+# ==========================================
+# CABECERA CON IMAGEN FUNCIONAL (st.image)
+# ==========================================
+col_img, col_info = st.columns([1, 3])
+with col_img:
+    st.image("assets/logo-1.jpg", use_container_width=True)
+with col_info:
+    st.markdown("""
+        <div style="text-align:center;">
+            <h1 style="font-size:28px; font-weight:700; margin-bottom:5px;">💈 WabiSabi Barber</h1>
+            <p style="font-size:16px; color:#555;">
+                En Barbería Wabi Sabi La Veloz, la dedicación a la perfección en cada corte de cabello es evidente<br>
+                Un equipo de expertos se asegura de que cada cliente reciba una atención personalizada y un estilo que resalte su individualidad. 
+                La experiencia se complementa con un ambiente acogedor, ideal para relajarse mientras se transforma tu look.
+                🕒 Lun-Sáb: 09:00–20:00
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+
+# ==========================================
 # MENÚ SUPERIOR
+# ==========================================
 selected = option_menu(
     menu_title=None,
     options=["Servicios", "Barberos", "Agendar", "Sedes"],
@@ -94,10 +142,11 @@ selected = option_menu(
         "nav-link-selected": {"background-color": "#2563eb", "color": "white"},
     },
 )
-
 st.session_state.page = selected.lower()
 
-# SERVICIOS
+# ==========================================
+# PÁGINAS
+# ==========================================
 if st.session_state.page == "servicios":
     st.title("💈 Servicios Disponibles")
     cols = st.columns(2)
@@ -114,7 +163,7 @@ if st.session_state.page == "servicios":
                 st.session_state.servicio_preseleccionado = s["nombre"]
                 st.session_state.page = "agendar"
                 st.rerun()
-# BARBEROS
+
 elif st.session_state.page == "barberos":
     st.title("🏢 Barberos y Sedes")
     for sede, data in SEDES.items():
@@ -136,39 +185,26 @@ elif st.session_state.page == "barberos":
                     st.rerun()
         st.divider()
 
-# AGENDAR
 elif st.session_state.page == "agendar":
     st.title("📅 Agendar Cita")
-
     sede_default = st.session_state.get("selected_sede", list(SEDES.keys())[0])
     sede = st.selectbox("🏢 Sede", list(SEDES.keys()), index=list(SEDES.keys()).index(sede_default))
-
     barberos_lista = [b["nombre"] for b in SEDES[sede]["barberos"]]
-    if "selected_barbero" in st.session_state and st.session_state.selected_barbero in barberos_lista:
-        barbero_index = barberos_lista.index(st.session_state.selected_barbero)
-    else:
-        barbero_index = 0
+    barbero_index = barberos_lista.index(st.session_state.get("selected_barbero", barberos_lista[0]))
     barbero = st.selectbox("💇 Barbero", barberos_lista, index=barbero_index)
-
-    servicio = st.selectbox(
-        "💈 Servicio",
-        [s["nombre"] for s in SERVICIOS],
-        index=next((i for i, s in enumerate(SERVICIOS)
-                    if s["nombre"] == st.session_state.get("servicio_preseleccionado")), 0)
-    )
+    servicio = st.selectbox("💈 Servicio", [s["nombre"] for s in SERVICIOS],
+                            index=next((i for i, s in enumerate(SERVICIOS)
+                                        if s["nombre"] == st.session_state.get("servicio_preseleccionado")), 0))
 
     with st.form("form_reserva"):
         nombre = st.text_input("👤 Nombre completo")
         email = st.text_input("📧 Correo electrónico")
         telefono = st.text_input("📞 Celular")
-
         col1, col2 = st.columns(2)
         with col1:
             fecha = st.date_input("📆 Fecha", datetime.today())
         with col2:
-            correo_barbero = next((b["correo"] for b in SEDES[sede]["barberos"] if b["nombre"] == barbero), None)
-            horas_libres = calendar.get_available_hours(correo_barbero, fecha)
-
+            horas_libres = calendar.get_available_hours(barbero, fecha)
             if horas_libres:
                 hora = st.selectbox("⏰ Hora disponible", horas_libres)
             else:
@@ -182,29 +218,15 @@ elif st.session_state.page == "agendar":
             elif not hora:
                 st.error("⏰ No hay hora seleccionada.")
             else:
-                try:
-                    calendar.create_event(
-                        calendar_id=correo_barbero,
-                        nombre=nombre,
-                        telefono=telefono,
-                        email=email,
-                        servicio=servicio,
-                        barberos=[correo_barbero],
-                        fecha=fecha,
-                        hora=time(int(hora.split(':')[0]), 0),
-                        duracion_min=60
-                    )
-                    st.success(f"✅ Cita confirmada con {barbero} en {sede} para las {hora}.")
-                    for key in ["servicio_preseleccionado", "selected_barbero", "selected_sede"]:
-                        st.session_state.pop(key, None)
-                except HttpError as e:
-                    st.error(f"Error al crear el evento: {e}")
+                calendar.create_event(barbero, nombre, telefono, email, servicio, [barbero], fecha, time(int(hora.split(':')[0]), 0))
+                st.success(f"✅ Cita confirmada con {barbero} en {sede} para las {hora}.")
+                for key in ["servicio_preseleccionado", "selected_barbero", "selected_sede"]:
+                    st.session_state.pop(key, None)
 
     if st.button("⬅️ Volver a Servicios", type="secondary", use_container_width=True):
         st.session_state.page = "servicios"
         st.rerun()
 
-# SEDES
 elif st.session_state.page == "sedes":
     st.title("📍 Nuestras Sedes")
     for sede, data in SEDES.items():
