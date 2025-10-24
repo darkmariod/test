@@ -2,7 +2,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta, time, date
 from zoneinfo import ZoneInfo
-import os, json
+import os
+import json
 
 # Zona horaria de Ecuador
 TZ = ZoneInfo("America/Guayaquil")
@@ -11,17 +12,22 @@ UTC = ZoneInfo("UTC")
 
 class GoogleCalendar:
     def __init__(self, creds_file: str = "credentials.json"):
-        # 🔹 Nuevo: lee las credenciales desde variable de entorno si existe
+        """
+        Inicializa el servicio de Google Calendar.
+        🔹 Usa la variable de entorno GOOGLE_CREDENTIALS_JSON (Railway)
+        🔹 Usa el archivo local credentials.json si estás en desarrollo
+        """
         creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
         if creds_env:
+            print("✅ Cargando credenciales desde entorno (Railway)")
             creds_info = json.loads(creds_env)
             creds = service_account.Credentials.from_service_account_info(
                 creds_info,
                 scopes=["https://www.googleapis.com/auth/calendar"]
             )
         else:
-            # 🔹 Si no hay variable (modo local)
+            print("⚙️ Cargando credenciales locales desde archivo")
             creds = service_account.Credentials.from_service_account_file(
                 creds_file,
                 scopes=["https://www.googleapis.com/auth/calendar"]
@@ -29,9 +35,9 @@ class GoogleCalendar:
 
         self.service = build("calendar", "v3", credentials=creds)
 
-    # -----------------------------
-    # Utilidades internas
-    # -----------------------------
+    # ======================================================
+    # UTILIDADES INTERNAS
+    # ======================================================
     def _to_utc_iso(self, dt_local: datetime) -> str:
         """Convierte un datetime local a ISO en UTC."""
         if dt_local.tzinfo is None:
@@ -50,16 +56,16 @@ class GoogleCalendar:
         return events.get("items", [])
 
     def _event_interval(self, event: dict) -> tuple[datetime, datetime]:
-        """
-        Retorna (start_utc, end_utc) SIEMPRE 'aware'.
-        """
+        """Retorna (start_utc, end_utc) SIEMPRE 'aware'."""
         if "dateTime" in event.get("start", {}):
             start = event["start"]["dateTime"]
             end = event["end"]["dateTime"]
             s = datetime.fromisoformat(start.replace("Z", "+00:00"))
             e = datetime.fromisoformat(end.replace("Z", "+00:00"))
-            if s.tzinfo is None: s = s.replace(tzinfo=UTC)
-            if e.tzinfo is None: e = e.replace(tzinfo=UTC)
+            if s.tzinfo is None:
+                s = s.replace(tzinfo=UTC)
+            if e.tzinfo is None:
+                e = e.replace(tzinfo=UTC)
             return s.astimezone(UTC), e.astimezone(UTC)
 
         start_date = event["start"]["date"]
@@ -74,7 +80,7 @@ class GoogleCalendar:
         return a_start < b_end and a_end > b_start
 
     # ======================================================
-    # DISPONIBILIDAD DE HORAS (10:00 - 19:30 cada 30 min)
+    # DISPONIBILIDAD DE HORAS
     # ======================================================
     def get_available_hours(
         self,
@@ -84,10 +90,7 @@ class GoogleCalendar:
         cierre_h: int = 19,
         slot_every_min: int = 30
     ) -> list[str]:
-        """
-        Devuelve todas las horas de 10:00 a 19:30 cada 30 minutos.
-        Oculta las horas que tengan eventos o bloqueos.
-        """
+        """Devuelve todas las horas disponibles (10:00 a 19:30 cada 30 min)."""
         start_day = datetime(fecha.year, fecha.month, fecha.day, apertura_h, 0, tzinfo=TZ)
         end_day = datetime(fecha.year, fecha.month, fecha.day, cierre_h, 30, tzinfo=TZ)
 
@@ -105,7 +108,7 @@ class GoogleCalendar:
             if any(x in summary for x in ("no disponible", "vacaciones", "fuera de oficina", "permiso")):
                 return []
 
-        disponibles: list[str] = []
+        disponibles = []
         for slot in all_slots:
             hora_dt = datetime.strptime(slot, "%H:%M").time()
             start_local = datetime.combine(fecha, hora_dt).replace(tzinfo=TZ)
@@ -134,6 +137,7 @@ class GoogleCalendar:
         hora: time,
         duracion_min: int = 60
     ):
+        """Crea un evento en el calendario."""
         if hora < time(10, 0) or hora > time(19, 30):
             raise ValueError("Solo se puede agendar entre 10:00 y 19:30.")
 
