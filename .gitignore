@@ -1,2 +1,4 @@
 barber-system/credentials.json
 .DS_Store
+barber-system/.DS_Store
+.env
