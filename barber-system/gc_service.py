@@ -19,21 +19,27 @@ class GoogleCalendar:
         """
         creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
-        if creds_env:
-            print("✅ Cargando credenciales desde entorno (Railway)")
-            creds_info = json.loads(creds_env)
-            creds = service_account.Credentials.from_service_account_info(
-                creds_info,
-                scopes=["https://www.googleapis.com/auth/calendar"]
-            )
-        else:
-            print("⚙️ Cargando credenciales locales desde archivo")
-            creds = service_account.Credentials.from_service_account_file(
-                creds_file,
-                scopes=["https://www.googleapis.com/auth/calendar"]
-            )
+        try:
+            if creds_env:
+                print("✅ Cargando credenciales desde entorno (Railway)")
+                # Cargar el JSON como diccionario
+                creds_info = json.loads(creds_env)
+                creds = service_account.Credentials.from_service_account_info(
+                    creds_info,
+                    scopes=["https://www.googleapis.com/auth/calendar"]
+                )
+            else:
+                print("⚙️ Cargando credenciales locales desde archivo")
+                creds = service_account.Credentials.from_service_account_file(
+                    creds_file,
+                    scopes=["https://www.googleapis.com/auth/calendar"]
+                )
 
-        self.service = build("calendar", "v3", credentials=creds)
+            self.service = build("calendar", "v3", credentials=creds)
+        except Exception as e:
+            print("❌ Error al inicializar Google Calendar:", e)
+            raise
+
 
     # ======================================================
     # UTILIDADES INTERNAS
