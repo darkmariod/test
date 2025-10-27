@@ -3,7 +3,12 @@ builder = "NIXPACKS"
 buildCommand = "pip install -r requirements.txt"
 
 [start]
-cmd = "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0"
+cmd = "streamlit run app.py --server.port=$PORT --server.address=0.0.0.0 --server.headless true"
+
+[env]
+PYTHONUNBUFFERED = "1"
+GOOGLE_CREDENTIALS_JSON = "{{ GOOGLE_CREDENTIALS_JSON }}"
+CALENDAR_ID = "{{ CALENDAR_ID }}"
 
 [deploy]
 numReplicas = 1
