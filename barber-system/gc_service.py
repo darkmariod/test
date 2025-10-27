@@ -17,7 +17,8 @@ class GoogleCalendar:
         🔹 Usa la variable de entorno GOOGLE_CREDENTIALS_JSON (Railway)
         🔹 Usa el archivo local credentials.json si estás en desarrollo
         """
-        creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON") or os.getenv("GOOGLE_CREDENTIALS_JSON")
+
 
         try:
             if creds_env:
