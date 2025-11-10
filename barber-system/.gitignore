@@ -1,7 +1,0 @@
-barber-system/credentials.json
-# Evita subir secretos y entornos
-.env
-env/
-__pycache__/
-credentials.json
-.railway
