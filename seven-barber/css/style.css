@@ -1,0 +1,261 @@
+/* ===========================
+   🎨 ESTILO GENERAL
+=========================== */
+body, .stApp {
+  background-color: #fff !important;
+  font-family: 'Poppins', sans-serif;
+  color: #1c1c1c;
+}
+
+/* ===========================
+   🧭 MENÚ SUPERIOR
+=========================== */
+.nav-item > a {
+  color: #222 !important;
+  font-weight: 500 !important;
+}
+
+.nav-item > .active {
+  background-color: #d4af37 !important;
+  color: white !important;
+  border-radius: 8px !important;
+}
+
+/* ===========================
+   🧾 FORMULARIO DE CITAS
+=========================== */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+  background-color: #f3f4f6 !important;
+  color: #000 !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+  font-size: 15px !important;
+  width: 100% !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2) !important;
+}
+
+/* ===========================
+   ✨ BOTÓN PRINCIPAL
+=========================== */
+div.stButton > button {
+  background-color: #d4af37 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  border: none !important;
+  width: 100% !important;
+  transition: 0.3s;
+}
+div.stButton > button:hover {
+  background-color: #b9962e !important;
+  transform: scale(1.03);
+}
+
+/* ===========================
+   💈 PORTAFOLIO RECTANGULAR
+=========================== */
+.stImage img {
+  border-radius: 10px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+  transition: transform 0.25s ease-in-out;
+  object-fit: cover !important;
+  height: 320px !important;
+}
+
+.stImage img:hover {
+  transform: scale(1.03);
+}
+
+/* ===========================
+   👤 PERFIL DE BARBERO
+=========================== */
+.perfil-barbero {
+  text-align: center;
+  margin: 2rem auto 1rem;
+}
+.perfil-barbero img {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #d4af37;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.perfil-barbero h3 {
+  margin-top: 10px;
+  color: #1c1c1c;
+  font-weight: 600;
+}
+.perfil-barbero p {
+  color: #555;
+  font-size: 14px;
+  max-width: 380px;
+  margin: 5px auto 0;
+  text-align: center;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  div.stButton > button {
+    width: 100% !important;
+  }
+  .stImage img {
+    height: 250px !important;
+  }
+}
+/* ===========================
+   💬 RESEÑAS COMPLETAS
+=========================== */
+.stImage > img {
+  border-radius: 16px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+  max-width: 100% !important;
+  height: auto !important;      /* 👈 Esto permite verlas completas */
+  object-fit: contain !important; /* 👈 Evita recortes */
+  margin-bottom: 12px !important;
+  transition: transform 0.25s ease-in-out;
+}
+
+.stImage > img:hover {
+  transform: scale(1.02);
+}
+/* ===========================
+   ⭐ RESEÑAS ESTILO GOOGLE
+=========================== */
+.google-reviews {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.card-reseña {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  transition: transform 0.25s ease;
+}
+.card-reseña:hover {
+  transform: translateY(-3px);
+}
+
+.reseña-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #d4af37;
+  color: #fff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.nombre {
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+.detalle {
+  font-size: 13px;
+  color: #777;
+}
+
+.estrellas {
+  color: #fbbc04;
+  margin-top: 5px;
+  font-size: 16px;
+}
+
+.texto {
+  margin: 10px 0;
+  color: #333;
+  font-size: 15px;
+}
+
+.respuesta {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f9f9f9;
+  border-left: 4px solid #d4af37;
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 12px;
+}
+
+.logo-owner {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.owner-tag {
+  color: #1a73e8;
+  font-size: 13px;
+  margin-left: 5px;
+}
+
+.respuesta-texto {
+  color: #444;
+  font-size: 14px;
+}
+
+/* 📱 Responsive */
+@media (max-width: 768px) {
+  .card-reseña {
+    padding: 1rem;
+  }
+}
+
+/* ===========================
+   💬 IMÁGENES DE RESEÑAS REALES
+=========================== */
+.stImage > img {
+  border-radius: 14px !important;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+  width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin-bottom: 10px !important;
+  transition: transform 0.25s ease-in-out;
+}
+
+.stImage > img:hover {
+  transform: scale(1.02);
+}
+
+/* Centrar captions debajo */
+.stImageCaption {
+  text-align: center !important;
+  font-size: 13px !important;
+  color: #555 !important;
+  margin-top: 5px !important;
+}

@@ -1,119 +1,216 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from datetime import datetime, timedelta
-from gc_service import GoogleCalendar  # tu clase en gc_service.py
+from gc_service import GoogleService
+import os
 
-# ================= CONFIGURACIÓN GOOGLE CALENDAR =================
-CREDENTIALS = "credentials.json"   # tu archivo de credenciales de service account
-CALENDAR_ID = "mariodanielq.p@gmail.com"  # tu calendario compartido con la service account
-gc = GoogleCalendar(CREDENTIALS, CALENDAR_ID)
+# =====================================
+# CONFIGURACIÓN GOOGLE CALENDAR
+# =====================================
+CREDENTIALS = "credentials.json"
+CALENDAR_ID = "mariodanielq.p@gmail.com"
+gc = GoogleService(CREDENTIALS)
 
-# ================= VARIABLES =================
-servicios_raw = [
-    "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
-    "Afeitado o Perfilación de barba - 3.00 USD",
-    "Corte Clásico con máquina - 5.00 USD",
-    "Corte Clásico a tijera - 5.00 USD",
-    "Freestyle (diseño personalizado) - 7.00 USD",
-    "Semi Ondulado (ondas) - desde 20.00 USD",
-    "VIP: Corte + Barba + Cejas + bebida de cortesía - 8.00 USD",
-]
+# =====================================
+# CARGAR ESTILOS
+# =====================================
+def load_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Destacar el VIP
-servicios = []
-for s in servicios_raw:
-    if "VIP" in s:
-        servicios.append(f"🌟 {s}")
-    else:
-        servicios.append(s)
+load_css("css/style.css")
 
-empleados = ["Josué", "Ariel"]
+# =====================================
+# CONFIG STREAMLIT
+# =====================================
+st.set_page_config(page_title="Seven Barber Club", page_icon="✂️", layout="centered")
 
-horarios = {
-    "Lunes": "09:00 - 21:00",
-    "Martes": "09:00 - 21:00",
-    "Miércoles": "09:00 - 21:00",
-    "Jueves": "09:00 - 21:00",
-    "Viernes": "09:00 - 21:00",
-    "Sábado": "09:00 - 21:00",
-    "Domingo": "09:00 - 21:00"
-}
-
-# ================= CONFIG STREAMLIT =================
-st.set_page_config(page_title="App de citas", page_icon="✂️", layout="centered")
 st.image("assets/banner.png")
 st.title("Seven Barber Club")
-st.text("📍 Av. Unidad Nacional ente Juan Montalvo y Carabobo")
+st.text("📍 Av. Unidad Nacional entre Juan Montalvo y Carabobo")
 
-# ================= MENÚ =================
+# =====================================
+# MENÚ
+# =====================================
 selected = option_menu(
     menu_title=None,
-    options=["Servicios", "Reseñas", "Portafolio", "Detalles"],
-    icons=["scissors", "chat-dots", "file-text", "pin"],
+    options=["Reservar", "Portafolio", "Cortes de Aprendiz", "Detalles", "Reseñas"],
+    icons=["calendar-check", "scissors", "person-workspace", "pin", "chat-dots"],
     orientation="horizontal",
 )
 
-# ================= PORTAFOLIO =================
-if selected == "Portafolio":
-    st.image("assets/corte-1.jpg", caption="Degradado básico")
-    st.image("assets/corte-2.jpg", caption="Corte más barba")
-    st.image("assets/corte-3.jpg", caption="Raya personalizada")
+# =====================================
+# SECCIÓN: RESERVAR
+# =====================================
+if selected == "Reservar":
+    st.subheader("📅 Reserva tu cita")
 
-# ================= DETALLES =================
-if selected == "Detalles":
-    st.image("assets/map.JPG")
-    st.markdown("[📍 Pulsa aquí](www.google.com) para ver la dirección en Google Maps.")
+    servicios = [
+        "",
+        "Perfil de cejas con guillet y gel de afeitar - 1.00 USD",
+        "Afeitado o Perfilación de barba - 3.00 USD",
+        "Corte Clásico con máquina - 5.00 USD",
+        "Corte Clásico a tijera - 5.00 USD",
+        "Freestyle (diseño personalizado) - 7.00 USD",
+        "Semi Ondulado (ondas) - desde 20.00 USD",
+        "VIP: Corte + Barba + Cejas + bebida de cortesía - 8.00 USD"
+    ]
 
-    st.subheader("💈 Barberos")
-    column1, column2 = st.columns(2)
-    column1.image("assets/barber-1.png", caption="Josué")
-    column2.image("assets/barber-2.png", caption="Ariel")
+    empleados = ["Josué", "Ariel", "Mario (Aprendiz)"]
 
-    st.markdown("### 🕒 Horarios de Atención")
-    c1, c2 = st.columns(2)
-    for dia, hora in horarios.items():
-        c1.markdown(f"**📅 {dia}**")
-        c2.markdown(f"⏰ {hora}")
-
-    st.markdown("📞 <b>098 840 2541</b>", unsafe_allow_html=True)
-    st.markdown("📷 [Instagram](www.instagram.com)")
-
-# ================= RESEÑAS =================
-if selected == "Reseñas":
-    st.image("assets/opinion1.JPG")
-    st.image("assets/opinion2.JPG")
-
-# ================= SERVICIOS =================
-if selected == "Servicios":
-    st.subheader("Reservar cita")
-    a1, a2 = st.columns(2)
-
-    nombre = a1.text_input("Tu nombre")
-    email = a2.text_input("Tu email (opcional)")
-    fecha = a1.date_input("Fecha")
-    hora = a2.selectbox("Horas disponibles", [
+    col1, col2 = st.columns(2)
+    nombre = col1.text_input("Tu nombre *")
+    whatsapp = col2.text_input("Tu WhatsApp * (Ej: 0987654321)")
+    email = col1.text_input("Tu email (opcional)")
+    fecha = col2.date_input("Fecha *")
+    servicio = col1.selectbox("Servicio *", servicios)
+    barbero = col2.selectbox("Barbero *", empleados)
+    nota = col1.text_area("💬 Nota (opcional)")
+    hora = col2.selectbox("Hora disponible *", [
         "09:00", "10:00", "11:00", "12:00",
-        "14:00","15:00","16:00", "17:00",
-        "18:00", "19:00","20:00"
+        "14:00", "15:00", "16:00", "17:00",
+        "18:00", "19:00", "20:00"
     ])
-    servicio = a1.selectbox("Servicio", servicios)
-    empleado = a2.selectbox("Barberos", empleados)
-    nota = a1.text_area("💬 Nota (opcional)")
 
     if st.button("Reservar"):
-        start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
-        end = start + timedelta(hours=1)
+        if not nombre or not whatsapp or not fecha or not servicio or not barbero or not hora:
+            st.warning("⚠️ Por favor completa todos los campos obligatorios marcados con * antes de continuar.")
+        else:
+            try:
+                start = datetime.combine(fecha, datetime.strptime(hora, "%H:%M").time())
+                end = start + timedelta(hours=1)
+                gc.crear_evento(
+                    calendar_id=CALENDAR_ID,
+                    resumen=f"Reserva: {servicio} con {barbero} - {nombre}",
+                    descripcion=f"Cliente: {nombre}\nWhatsApp: {whatsapp}\nServicio: {servicio}\nBarbero: {barbero}\nNota: {nota}",
+                    inicio=start,
+                    fin=end,
+                    timezone="America/Guayaquil"
+                )
+                st.success(f"✅ Reserva confirmada correctamente para {nombre} el {fecha} a las {hora} con {barbero}.")
+                st.balloons()
 
-        try:
-            # Crear evento SIN attendees para evitar error 403
-            gc.create_event(
-                name_event=f"Reserva: {servicio} con {empleado} - {nombre}",
-                start_time=start.isoformat(),
-                end_time=end.isoformat(),
-                timezone="America/Guayaquil"
-            )
+                msg = f"Hola {barbero}, tienes una nueva reserva:\nCliente: {nombre}\nServicio: {servicio}\nHora: {hora}\nFecha: {fecha}\nWhatsApp: {whatsapp}"
+                url = f"https://wa.me/593{whatsapp}?text={msg.replace(' ', '%20')}"
+                st.markdown(f"[📲 Enviar mensaje por WhatsApp]({url})", unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"❌ Ocurrió un error al crear la reserva: {e}")
 
-            st.success(f"✅ Reserva confirmada para {nombre} el {fecha} a las {hora} con {empleado} ({servicio}).")
+# =====================================
+# SECCIÓN: PORTAFOLIO
+# =====================================
+if selected == "Portafolio":
+    # ===== Josué =====
+    st.markdown("""
+    <div class="perfil-barbero">
+        <img src="assets/josue-perfil.jpg" alt="Josué">
+        <h3>👑 Josué</h3>
+        <p>Maestro barbero de Seven Barber Club.  
+        Estilo, precisión y elegancia en cada corte.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        except Exception as e:
-            st.error(f"❌ Ocurrió un error: {e}")
+    st.subheader("💇‍♂️ Cortes de Josué")
+    cols = st.columns(3)
+    cortes_josue = [
+        "assets/corte-1.jpg", "assets/corte-2.jpg", "assets/corte-3.jpg",
+        "assets/barber-1-test.png", "assets/barber-2-test.png", "assets/corte-1.jpg"
+    ]
+    for i, img in enumerate(cortes_josue):
+        with cols[i % 3]:
+            st.image(img, use_container_width=True)
+
+    st.markdown("---")
+
+    # ===== Ariel =====
+    st.markdown("""
+    <div class="perfil-barbero">
+        <img src="assets/ariel-perfil.jpg" alt="Ariel">
+        <h3>💈 Ariel</h3>
+        <p>Barbero profesional, experto en cortes con carácter.  
+        Técnica limpia y diseño moderno con personalidad.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.subheader("💈 Cortes de Ariel")
+    cols = st.columns(3)
+    cortes_ariel = [
+        "assets/corte-1.jpg", "assets/corte-2.jpg", "assets/corte-3.jpg",
+        "assets/barber-1-test.png", "assets/barber-2-test.png", "assets/corte-3.jpg"
+    ]
+    for i, img in enumerate(cortes_ariel):
+        with cols[i % 3]:
+            st.image(img, use_container_width=True)
+
+# =====================================
+# SECCIÓN: CORTES DE APRENDIZ
+# =====================================
+if selected == "Cortes de Aprendiz":
+    st.subheader("💈 Cortes de Aprendiz — Mario (Seven Barber Club)")
+    st.markdown("""
+    ✂️ **Cortes de práctica profesional con dedicación y estilo.**  
+    💸 *Precio especial: 2.00 USD — solo bajo reserva.*  
+    ⏰ *Horario disponible: de 16:00 a 20:00*
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image("assets/corte-aprendiz-1.png", caption="Mid Fade — Corte moderno de práctica", use_container_width=True)
+    with col2:
+        st.image("assets/corte-aprendiz-2.png", caption="Clásico — Corte tradicional", use_container_width=True)
+
+# =====================================
+# SECCIÓN: DETALLES
+# =====================================
+if selected == "Detalles":
+    st.subheader("📍 Ubicación y Horarios")
+    st.image("assets/map.jpg", caption="Mapa de Seven Barber Club", use_container_width=True)
+    st.markdown("""
+    📌 **Dirección:**  
+    Av. Unidad Nacional entre Juan Montalvo y Carabobo — Riobamba, Ecuador.  
+    """, unsafe_allow_html=True)
+    st.markdown("### 🕒 Horarios de Atención")
+    horarios = {
+        "Lunes a Viernes": "09:00 - 21:00",
+        "Sábado": "09:00 - 21:00",
+        "Domingo": "09:00 - 21:00"
+    }
+    for dia, hora in horarios.items():
+        st.markdown(f"**{dia}:** {hora}")
+    st.markdown("""
+    ### 📞 Contacto
+    📲 WhatsApp: **098 840 2541**  
+    📷 Instagram: [@sevenbarberclub](https://www.instagram.com)  
+    💈 *Donde el estilo se crea con precisión.*
+    """, unsafe_allow_html=True)
+    # =====================================
+
+# =====================================
+# SECCIÓN: RESEÑAS (imágenes reales)
+# =====================================
+if selected == "Reseñas":
+    st.subheader("💬 Opiniones de nuestros clientes")
+    st.markdown("""
+    ✂️ **Mira algunas experiencias reales de nuestros clientes en Seven Barber Club.**
+    """, unsafe_allow_html=True)
+
+    # Validar imágenes antes de mostrarlas
+    rutas = ["assets/review-1.png", "assets/review-2.png", "assets/qr.png"]
+    for ruta in rutas:
+        if not os.path.exists(ruta):
+            st.warning(f"⚠️ No se encontró el archivo: {ruta}")
+
+    # --- Fila 1 ---
+    col1, col2 = st.columns(2, gap="large")
+    with col1:
+        st.image("assets/review-1.png", caption="⭐ Opinión real — Arturo Llerena", use_container_width=True)
+    with col2:
+        st.image("assets/review-2.png", caption="⭐ Opinión real — Jonas Pinduisaca", use_container_width=True)
+
+    # --- Fila 2 ---
+    col3, col4 = st.columns(2, gap="large")
+    with col3:
+        st.image("assets/review-1.png", caption="⭐ Opinión real — Cliente Seven Barber Club", use_container_width=True)
+    with col4:
+        st.image("assets/qr.png", caption="📱 Escanea y deja tu reseña en Google", use_container_width=True)
+

@@ -1,33 +1,76 @@
-# gc_service.py
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+import os, json
 
-class GoogleCalendar:
-    def __init__(self, credentials_file, calendarid):
-        self.credentials_file = credentials_file
-        self.calendarid = calendarid
-        self.service = self._create_service()
+TZ = ZoneInfo("America/Guayaquil")
 
-    def _create_service(self):
-        credentials = service_account.Credentials.from_service_account_file(
-            self.credentials_file,
-            scopes=['https://www.googleapis.com/auth/calendar']
-        )
-        return build('calendar', 'v3', credentials=credentials)
+class GoogleService:
+    def __init__(self, creds_file: str = "credentials.json"):
+        creds_env = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if creds_env:
+            creds_env = creds_env.replace("\\n", "\n")
+            info = json.loads(creds_env)
+            creds = service_account.Credentials.from_service_account_info(
+                info, scopes=["https://www.googleapis.com/auth/calendar"]
+            )
+        else:
+            creds = service_account.Credentials.from_service_account_file(
+                creds_file, scopes=["https://www.googleapis.com/auth/calendar"]
+            )
 
-    def create_event(self, name_event, start_time, end_time, timezone):
-        event = {
-            'summary': name_event,
-            'start': {'dateTime': start_time, 'timeZone': timezone},
-            'end': {'dateTime': end_time, 'timeZone': timezone},
-        }
+        self.service = build("calendar", "v3", credentials=creds)
 
+    # HORAS DISPONIBLES
+    def generar_slots_libres(self, calendar_id: str, fecha: datetime, duracion_min: int):
         try:
-            created_event = self.service.events().insert(
-                calendarId=self.calendarid,
-                body=event
-            ).execute()
-            return created_event
-        except HttpError as error:
-            raise Exception(f"❌ Error creando evento: {error}")
+            start_day = datetime(fecha.year, fecha.month, fecha.day, 9, 0, tzinfo=TZ)
+            end_day = datetime(fecha.year, fecha.month, fecha.day, 20, 0, tzinfo=TZ)
+            step = timedelta(minutes=30)
+            horas = []
+
+            events = self.service.events().list(
+                calendarId=calendar_id,
+                timeMin=start_day.isoformat(),
+                timeMax=end_day.isoformat(),
+                singleEvents=True,
+                orderBy="startTime"
+            ).execute().get("items", [])
+
+            ocupados = []
+            for e in events:
+                s = e["start"].get("dateTime")
+                f = e["end"].get("dateTime")
+                if s and f:
+                    s_dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+                    f_dt = datetime.fromisoformat(f.replace("Z", "+00:00"))
+                    ocupados.append((s_dt, f_dt))
+
+            current = start_day
+            while current + timedelta(minutes=duracion_min) <= end_day:
+                libre = True
+                for (s, f) in ocupados:
+                    if s <= current < f:
+                        libre = False
+                        break
+                if libre:
+                    horas.append(current.strftime("%H:%M"))
+                current += step
+
+            return horas
+        except Exception as e:
+            print("❌ Error generando slots:", e)
+            return []
+
+    # CREAR EVENTO
+    def crear_evento(self, calendar_id, resumen, descripcion, inicio, fin, timezone):
+        evento = {
+            "summary": resumen,
+            "description": descripcion,
+            "start": {"dateTime": inicio.isoformat(), "timeZone": timezone},
+            "end": {"dateTime": fin.isoformat(), "timeZone": timezone},
+            "reminders": {"useDefault": False, "overrides": [{"method": "popup", "minutes": 30}]},
+        }
+        self.service.events().insert(calendarId=calendar_id, body=evento).execute()
+        print(f"✅ Evento creado: {resumen}")
